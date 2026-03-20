@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Leftover AI - Pro Unlocked</title>
+    <style>
+        :root {
+            --primary-green: #32CD32; 
+            --soft-white: #F8F9FA;    
+            --text-dark: #333333;
+            --bg-gray: #f0f2f5;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
+            background-color: #d1d8e0; display: flex; justify-content: center;
+            align-items: center; height: 100vh; margin: 0; color: var(--text-dark);
+        }
+
+        .app-container {
+            width: 100%; max-width: 450px; height: 100dvh;   
+            background-color: var(--soft-white); box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; position: relative; overflow: hidden;
+        }
+
+        .header {
+            background-color: var(--primary-green); color: white; padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: bold; font-size: 20px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .pro-badge {
+            font-size: 12px; background: linear-gradient(45deg, #FFD700, #FFA500); 
+            color: #333; padding: 5px 10px; border-radius: 15px; cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-weight: 900; transition: 0.3s;
+        }
+
+        .screen {
+            padding: 15px; flex-grow: 1; display: none; flex-direction: column;
+            overflow-y: auto; padding-bottom: 70px; background-color: var(--bg-gray);
+        }
+
+        .active-screen { display: flex; }
+
+        .section-title { font-size: 15px; margin: 15px 0 10px 0; font-weight: bold; }
+
+        .search-bar {
+            width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #ddd;
+            font-family: inherit; font-size: 14px; box-sizing: border-box; margin-bottom: 10px;
+        }
+
+        .ingredient-list {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+            max-height: 200px; overflow-y: auto; padding-bottom: 5px;
+        }
+
+        .ingredient-item {
+            background: white; border: 2px solid #ddd; border-radius: 10px;
+            padding: 8px 5px; text-align: center; font-size: 12px; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 5px; transition: 0.1s;
+        }
+
+        .ingredient-item.selected {
+            border-color: var(--primary-green); background-color: #e8fce8; font-weight: bold;
+        }
+
+        .ing-emoji { font-size: 20px; }
+
+        .staples-container { display: flex; flex-wrap: wrap; gap: 8px; max-height: 120px; overflow-y: auto;}
+        
+        .staple-pill {
+            background-color: white; border: 1px solid #ccc; padding: 8px 12px;
+            border-radius: 20px; font-size: 13px; cursor: pointer;
+        }
+
+        .staple-pill.active {
+            background-color: var(--primary-green); color: white; border-color: var(--primary-green);
+        }
+
+        select.filter-dropdown {
+            width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #ddd;
+            font-family: inherit; margin-bottom: 20px; font-size: 14px; background-color: white;
+        }
+
+        .btn-main {
+            background-color: var(--primary-green); color: white; border: none;
+            padding: 15px; border-radius: 25px; font-size: 18px; font-family: inherit;
+            font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;
+            box-shadow: 0 4px 6px rgba(50, 205, 50, 0.3);
+        }
+
+        .recipe-card {
+            background: white; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; overflow: hidden; margin-bottom: 10px;
+        }
+
+        .recipe-image {
+            width: 100%; height: 250px; object-fit: cover; 
+            border-bottom: 3px solid var(--primary-green); display: block; background-color: #eee;
+        }
+
+        .recipe-info { padding: 15px; text-align: center; }
+        .recipe-title { font-size: 20px; font-weight: bold; margin: 0 0 5px 0; }
+        .recipe-match { color: var(--primary-green); font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+        
+        .swipe-controls { display: flex; justify-content: space-around; padding: 10px 0; }
+        .btn-swipe {
+            width: 65px; height: 65px; border-radius: 50%; border: none; font-size: 24px; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); background-color: white; transition: transform 0.1s;
+        }
+        .btn-swipe:active { transform: scale(0.9); }
+
+        .detail-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .btn-back { background: none; border: none; font-size: 24px; cursor: pointer; margin-right: 10px; }
+        .detail-img { width: 100%; height: 200px; border-radius: 15px; object-fit: cover; margin-bottom: 15px; background-color: #eee;}
+        .detail-content h3 { margin-top: 0; color: var(--primary-green); }
+        .detail-content ul { padding-left: 20px; margin-bottom: 20px; font-size: 14px;}
+        .detail-content p { font-size: 14px; line-height: 1.6; white-space: pre-line; }
+
+        /* --- PRO Features UI --- */
+        .nutrition-upsell {
+            background: #ffeaa7; padding: 12px; border-radius: 10px; margin-bottom: 15px; 
+            font-size: 13px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .nutrition-tracker {
+            display: none; background: #e8fce8; padding: 15px; border-radius: 10px; 
+            margin-bottom: 15px; border: 2px solid var(--primary-green); box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .nutrition-stats {
+            display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-top: 8px;
+        }
+
+        .fav-item {
+            display: flex; background: white; padding: 10px; border-radius: 10px;
+            margin-bottom: 10px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            cursor: pointer; transition: transform 0.1s;
+        }
+        .fav-item:active { transform: scale(0.98); }
+        .fav-item img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; margin-right: 15px; background-color: #eee; }
+
+        .bottom-nav {
+            position: absolute; bottom: 0; width: 100%; background: white;
+            display: flex; justify-content: space-around; padding: 10px 0;
+            border-top: 1px solid #ddd; z-index: 10;
+        }
+        .nav-item { text-align: center; font-size: 12px; color: #888; cursor: pointer; }
+        .nav-item.active { color: var(--primary-green); font-weight: bold; }
+        .nav-icon { font-size: 24px; display: block; margin-bottom: 2px; }
+
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 100; display: none;
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; width: 85%; border-radius: 20px; padding: 20px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative;
+        }
+        .close-btn {
+            position: absolute; top: 10px; right: 15px; font-size: 20px;
+            cursor: pointer; color: #888; border: none; background: none; font-weight: bold;
+        }
+        .pro-price { font-size: 28px; color: var(--primary-green); font-weight: bold; margin: 10px 0; }
+        .pro-feature { text-align: left; margin-bottom: 15px; font-size: 14px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="header">
+            <span>LEFTOVER AI</span>
+            <span class="pro-badge" id="pro-badge-top" onclick="toggleProModal()">PRO 👑</span>
+        </div>
+
+        <div id="screen-home" class="screen active-screen">
+            <div class="section-title">1. What's in your fridge?</div>
+            <input type="text" id="search-input" class="search-bar" placeholder="Search (e.g., Bread, Tofu, Spinach)..." onkeyup="filterIngredients()">
+            <div class="ingredient-list" id="ingredient-container"></div>
+
+            <div class="section-title">2. Select your pantry staples:</div>
+            <div class="staples-container">
+                <div class="staple-pill" onclick="this.classList.toggle('active')">🧂 Salt</div>
+                <div class="staple-pill" onclick="this.classList.toggle('active')">⚫ Black Pepper</div>
+                <div class="staple-pill" onclick="this.classList.toggle('active')">🫒 Olive Oil</div>
+                <div class="staple-pill" onclick="this.classList.toggle('active')">🧈 Butter</div>
+                <div class="staple-pill" onclick="this.classList.toggle('active')">🧄 Garlic Powder</div>
+                <div class="staple-pill" onclick="this.classList.toggle('active')">🥡 Soy Sauce</div>
+                <div class="staple-pill" onclick="this.classList.toggle('active')">🌶️ Chili Flakes</div>
+            </div>
+
+            <div class="section-title">3. Filter:</div>
+            <select class="filter-dropdown">
+                <option>Dinner</option>
+                <option>Lunch</option>
+                <option>Breakfast</option>
+                <option>Brunch</option>
+                <option>Snack</option>
+                <option>Healthy Snack</option>
+                <option>Meal for Kids</option>
+            </select>
+
+            <button class="btn-main" onclick="generateSmartRecipes()">GENERATE RECIPES</button>
+        </div>
+
+        <div id="screen-swipe" class="screen">
+            <div class="recipe-card">
+                <img class="recipe-image" id="swipe-img" src="" alt="Recipe Food Photo">
+                <div class="recipe-info">
+                    <h2 class="recipe-title" id="swipe-title">Recipe Title</h2>
+                    <div class="recipe-match" id="swipe-match">100% Match!</div>
+                </div>
+            </div>
+
+            <div class="swipe-controls">
+                <button class="btn-swipe" style="color: #ff4757; border: 2px solid #ff4757;" onclick="nextRecipe()">❌</button>
+                <button class="btn-swipe" style="color: var(--primary-green); border: 2px solid var(--primary-green);" onclick="saveRecipe()">💚</button>
+            </div>
+            <button class="btn-main" style="background: white; color: var(--primary-green); border: 2px solid var(--primary-green);" onclick="openRecipeDetail(filteredRecipes[currentRecipeIndex].id)">📖 View Recipe Details</button>
+            <p style="text-align: center; color: #666; font-size: 13px; margin-top: 15px;">Swipe left to reject, right to save.</p>
+        </div>
+
+        <div id="screen-detail" class="screen">
+            <div class="detail-header">
+                <button class="btn-back" onclick="navTo('screen-home')">🔙</button>
+                <h2 style="margin:0; font-size: 18px;" id="detail-title">Recipe Title</h2>
+            </div>
+            <img src="" class="detail-img" id="detail-img" alt="Recipe Food Photo">
+            <div class="detail-content">
+                
+                <div class="nutrition-upsell" id="nutrition-upsell" onclick="toggleProModal()">
+                    🔒 <strong>Nutritional Tracking</strong> is a PRO feature. Tap to unlock!
+                </div>
+
+                <div class="nutrition-tracker" id="nutrition-tracker">
+                    <h4 style="margin:0; color: var(--primary-green);">💪 Nutritional Profile</h4>
+                    <div class="nutrition-stats" id="nutrition-stats">
+                        </div>
+                </div>
+
+                <h3>Ingredients:</h3>
+                <ul id="detail-ingredients"></ul>
+                <h3>Instructions:</h3>
+                <p id="detail-instructions"></p>
+            </div>
+        </div>
+
+        <div id="screen-fav" class="screen">
+            <h2 style="margin-top:0;">Saved Recipes 💚</h2>
+            <div id="fav-list">
+                <p style="color:#888; text-align:center;" id="text-no-favs">No recipes saved yet. Start swiping!</p>
+            </div>
+            <p style="text-align:center; font-size: 12px; color: #888; margin-top: 20px; background: #eee; padding: 10px; border-radius: 10px;">
+                <em>Access your favorite saved recipes anywhere with Offline Mode.</em>
+            </p>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active" id="nav-home" onclick="navTo('screen-home')">
+                <span class="nav-icon">🏠</span><span>Pantry</span>
+            </div>
+            <div class="nav-item" id="nav-cam" onclick="simulateCameraScan()">
+                <span class="nav-icon">📷</span><span>AI Scan</span>
+            </div>
+            <div class="nav-item" id="nav-fav" onclick="navTo('screen-fav')">
+                <span class="nav-icon">💚</span><span>Saved</span>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="pro-modal">
+            <div class="modal-content">
+                <button class="close-btn" onclick="toggleProModal()">✕</button>
+                <h2>Upgrade to LEFTOVER PRO</h2>
+                <div class="pro-price">$2.99 / mo</div>
+                <div class="pro-feature"><strong>💪 Nutritional Tracking</strong><br>Automatically syncs calories and macros to Apple Health and MyFitnessPal.</div>
+                <div class="pro-feature"><strong>📵 Offline Mode</strong><br>Access your favorite saved recipes anywhere, without needing Wi-Fi.</div>
+                
+                <button class="btn-main" onclick="subscribeToPro()">Subscribe Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- App State ---
+        let isProUser = false;
+
+        function subscribeToPro() {
+            isProUser = true;
+            toggleProModal();
+            
+            // Change the badge
+            let badge = document.getElementById('pro-badge-top');
+            badge.innerText = "PRO ACTIVE 🌟";
+            badge.style.background = "var(--primary-green)";
+            badge.style.color = "white";
+
+            // If we are currently looking at a recipe, refresh it so the nutrition shows up immediately
+            if(document.getElementById('screen-detail').classList.contains('active-screen')) {
+                // Find the ID based on the title (simple hack for this prototype)
+                let currentTitle = document.getElementById('detail-title').innerText;
+                let activeRecipe = allRecipes.find(r => r.title === currentTitle);
+                if(activeRecipe) openRecipeDetail(activeRecipe.id);
+            }
+
+            alert("🎉 Subscribed to PRO!\n\nNutritional Tracking and Offline Mode are now unlocked.");
+        }
+
+        // --- Massive Ingredient Database ---
+        const allIngredients = [
+            { name: "Chicken Breast", emoji: "🍗" }, { name: "Minced Beef", emoji: "🥩" }, { name: "Bacon", emoji: "🥓" }, { name: "Salmon", emoji: "🐟" }, { name: "Tofu", emoji: "🧊" },
+            { name: "Tomato", emoji: "🍅" }, { name: "White Onion", emoji: "🧅" }, { name: "Garlic", emoji: "🧄" }, { name: "Potatoes", emoji: "🥔" }, { name: "Broccoli", emoji: "🥦" }, { name: "Spinach", emoji: "🥬" }, { name: "Bell Pepper", emoji: "🫑" }, { name: "Mushroom", emoji: "🍄" },
+            { name: "Eggs", emoji: "🥚" }, { name: "Milk", emoji: "🥛" }, { name: "Cheddar Cheese", emoji: "🧀" }, { name: "Mozzarella", emoji: "🧀" },
+            { name: "Spaghetti", emoji: "🍝" }, { name: "Penne Pasta", emoji: "🍝" }, { name: "White Rice", emoji: "🍚" }, { name: "Brown Rice", emoji: "🍚" }, { name: "Bread", emoji: "🍞" }
+        ];
+
+        const container = document.getElementById('ingredient-container');
+        function renderIngredients(list) {
+            container.innerHTML = "";
+            list.forEach(ing => {
+                let div = document.createElement('div'); div.className = "ingredient-item";
+                div.innerHTML = `<span class="ing-emoji">${ing.emoji}</span><span class="ing-name">${ing.name}</span>`;
+                div.onclick = function() { this.classList.toggle('selected'); };
+                container.appendChild(div);
+            });
+        }
+        renderIngredients(allIngredients);
+
+        function filterIngredients() {
+            let input = document.getElementById('search-input').value.toLowerCase();
+            let filtered = allIngredients.filter(ing => ing.name.toLowerCase().includes(input));
+            renderIngredients(filtered);
+        }
+
+        // --- 33 Smart Recipes ---
+        const allRecipes = [
+            { id: 1, title: "Pan-Seared Chicken", img: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500&q=80", match: "Perfect match!", keyIngredients: ["chicken breast"], ingredients: ["Chicken Breast", "Olive Oil", "Salt"], instructions: "Sear chicken in a pan for 6 mins per side." },
+            { id: 2, title: "Chicken Fried Rice", img: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=500&q=80", match: "Perfect match!", keyIngredients: ["chicken breast", "white rice", "brown rice"], ingredients: ["Chicken Breast", "Rice", "Eggs", "Soy Sauce"], instructions: "Stir fry chicken, add rice and eggs, toss with soy sauce." },
+            { id: 3, title: "Chicken & Broccoli Bowl", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80", match: "Perfect match!", keyIngredients: ["chicken breast", "broccoli"], ingredients: ["Chicken Breast", "Broccoli", "Garlic"], instructions: "Sauté garlic, cook chicken, toss in broccoli until tender." },
+            { id: 4, title: "Savory Beef & Rice", img: "https://images.unsplash.com/photo-1544365558-35aa4afcf11f?w=500&q=80", match: "Perfect match!", keyIngredients: ["minced beef", "white rice", "brown rice"], ingredients: ["Minced Beef", "Rice", "Soy Sauce"], instructions: "Brown beef, mix with rice and soy sauce." },
+            { id: 5, title: "Spaghetti Bolognese", img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&q=80", match: "Perfect match!", keyIngredients: ["minced beef", "spaghetti", "tomato"], ingredients: ["Minced Beef", "Spaghetti", "Tomato", "Onion"], instructions: "Cook pasta. Brown beef with onions, add tomatoes to make sauce." },
+            { id: 6, title: "Beef Hash", img: "https://images.unsplash.com/photo-1525385133512-2f3bdd039054?w=500&q=80", match: "Perfect match!", keyIngredients: ["minced beef", "potatoes", "eggs"], ingredients: ["Minced Beef", "Potatoes", "Eggs"], instructions: "Fry diced potatoes, add beef, top with fried eggs." },
+            { id: 7, title: "Bacon Fried Rice", img: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=500&q=80", match: "Perfect match!", keyIngredients: ["bacon", "white rice", "brown rice", "eggs"], ingredients: ["Bacon", "Rice", "Eggs"], instructions: "Crisp bacon, add cold rice and scramble eggs in." },
+            { id: 8, title: "Spaghetti Carbonara", img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&q=80", match: "Perfect match!", keyIngredients: ["bacon", "spaghetti", "eggs"], ingredients: ["Spaghetti", "Bacon", "Eggs", "Cheese"], instructions: "Cook pasta. Mix eggs and cheese, toss with hot pasta and bacon." },
+            { id: 9, title: "Bacon & Potato Hash", img: "https://images.unsplash.com/photo-1525385133512-2f3bdd039054?w=500&q=80", match: "Perfect match!", keyIngredients: ["bacon", "potatoes", "white onion"], ingredients: ["Bacon", "Potatoes", "White Onion"], instructions: "Fry bacon, remove. Cook potatoes and onions in bacon fat. Mix." },
+            { id: 10, title: "Garlic Butter Salmon", img: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=500&q=80", match: "Perfect match!", keyIngredients: ["salmon", "garlic"], ingredients: ["Salmon", "Garlic", "Butter"], instructions: "Pan sear salmon, baste with garlic butter." },
+            { id: 11, title: "Salmon Rice Bowl", img: "https://images.unsplash.com/photo-1544365558-35aa4afcf11f?w=500&q=80", match: "Perfect match!", keyIngredients: ["salmon", "white rice", "brown rice"], ingredients: ["Salmon", "Rice", "Soy Sauce"], instructions: "Flake cooked salmon over a bowl of warm rice." },
+            { id: 12, title: "Creamy Salmon Pasta", img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&q=80", match: "Perfect match!", keyIngredients: ["salmon", "penne pasta", "milk"], ingredients: ["Salmon", "Penne", "Milk", "Garlic"], instructions: "Cook pasta. Make a garlic milk reduction, add cooked salmon." },
+            { id: 13, title: "Tofu Stir-Fry", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80", match: "Perfect match!", keyIngredients: ["tofu", "broccoli", "bell pepper"], ingredients: ["Tofu", "Broccoli", "Bell Pepper", "Soy Sauce"], instructions: "Cube and fry tofu. Add veggies and stir fry." },
+            { id: 14, title: "Crispy Tofu & Rice", img: "https://images.unsplash.com/photo-1544365558-35aa4afcf11f?w=500&q=80", match: "Perfect match!", keyIngredients: ["tofu", "white rice", "brown rice"], ingredients: ["Tofu", "Rice", "Garlic"], instructions: "Fry tofu until crispy, serve over rice with garlic oil." },
+            { id: 15, title: "Scrambled Tofu", img: "https://images.unsplash.com/photo-1525385133512-2f3bdd039054?w=500&q=80", match: "Perfect match!", keyIngredients: ["tofu", "tomato", "spinach"], ingredients: ["Tofu", "Tomato", "Spinach"], instructions: "Crumble tofu in a pan, cook with diced tomatoes and spinach." },
+            { id: 16, title: "Classic Tomato Spaghetti", img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&q=80", match: "Perfect match!", keyIngredients: ["tomato", "spaghetti", "garlic"], ingredients: ["Spaghetti", "Tomato", "Garlic"], instructions: "Cook pasta. Sauté garlic and tomatoes to make a sauce." },
+            { id: 17, title: "Shakshuka", img: "https://images.unsplash.com/photo-1590412200288-7e915d9af90b?w=500&q=80", match: "Perfect match!", keyIngredients: ["tomato", "eggs", "white onion", "bell pepper"], ingredients: ["Tomato", "Eggs", "White Onion", "Bell Pepper"], instructions: "Cook onions and peppers, add tomatoes. Crack eggs into the sauce and cover." },
+            { id: 18, title: "Caprese Toast", img: "https://images.unsplash.com/photo-1592823631855-32bdc838e55c?w=500&q=80", match: "Perfect match!", keyIngredients: ["tomato", "bread", "mozzarella"], ingredients: ["Bread", "Tomato", "Mozzarella"], instructions: "Toast bread, top with sliced mozzarella and tomato." },
+            { id: 19, title: "Spanish Omelette", img: "https://images.unsplash.com/photo-1560611227-f4e3c8f85f57?w=500&q=80", match: "Perfect match!", keyIngredients: ["potatoes", "eggs", "white onion"], ingredients: ["Potatoes", "Eggs", "White Onion"], instructions: "Thinly slice and fry potatoes and onions, mix with eggs, cook like a pancake." },
+            { id: 20, title: "Broccoli Cheddar Soup", img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=500&q=80", match: "Perfect match!", keyIngredients: ["broccoli", "cheddar cheese", "milk", "potatoes"], ingredients: ["Broccoli", "Cheddar", "Milk", "Potatoes"], instructions: "Boil potatoes and broccoli, blend with milk and cheese." },
+            { id: 21, title: "Garlic Roasted Broccoli", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80", match: "Perfect match!", keyIngredients: ["broccoli", "garlic"], ingredients: ["Broccoli", "Garlic", "Olive Oil"], instructions: "Toss broccoli in garlic and oil, roast in oven." },
+            { id: 22, title: "Spinach & Cheese Pasta", img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&q=80", match: "Perfect match!", keyIngredients: ["spinach", "penne pasta", "mozzarella"], ingredients: ["Spinach", "Penne", "Mozzarella"], instructions: "Cook pasta, stir in fresh spinach and mozzarella until melted." },
+            { id: 23, title: "Mushroom Risotto", img: "https://images.unsplash.com/photo-1544365558-35aa4afcf11f?w=500&q=80", match: "Perfect match!", keyIngredients: ["mushroom", "white rice", "brown rice", "garlic"], ingredients: ["Mushroom", "Rice", "Garlic"], instructions: "Sauté mushrooms and garlic, slowly cook rice adding water gradually." },
+            { id: 24, title: "Creamy Mushroom Pasta", img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&q=80", match: "Perfect match!", keyIngredients: ["mushroom", "spaghetti", "milk"], ingredients: ["Mushroom", "Spaghetti", "Milk"], instructions: "Sauté mushrooms, add milk to reduce, toss with pasta." },
+            { id: 25, title: "Mushroom Omelette", img: "https://images.unsplash.com/photo-1525385133512-2f3bdd039054?w=500&q=80", match: "Perfect match!", keyIngredients: ["mushroom", "eggs", "cheddar cheese"], ingredients: ["Mushroom", "Eggs", "Cheddar Cheese"], instructions: "Fry mushrooms, pour whisked eggs over them, add cheese." },
+            { id: 26, title: "French Toast", img: "https://images.unsplash.com/photo-1484723091791-0fee59cb0c47?w=500&q=80", match: "Perfect match!", keyIngredients: ["bread", "eggs", "milk"], ingredients: ["Bread", "Eggs", "Milk"], instructions: "Whisk eggs and milk, dip bread, fry on a buttered pan." },
+            { id: 27, title: "Grilled Cheese", img: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=500&q=80", match: "Perfect match!", keyIngredients: ["bread", "cheddar cheese", "mozzarella"], ingredients: ["Bread", "Cheddar", "Mozzarella", "Butter"], instructions: "Butter bread, place cheese between slices, grill until melted." },
+            { id: 28, title: "Garlic Bread", img: "https://images.unsplash.com/photo-1541532713292-045a05b32e01?w=500&q=80", match: "Perfect match!", keyIngredients: ["bread", "garlic", "mozzarella"], ingredients: ["Bread", "Garlic", "Mozzarella", "Butter"], instructions: "Mix garlic and butter, spread on bread, top with cheese and bake." },
+            { id: 29, title: "Mac & Cheese", img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&q=80", match: "Perfect match!", keyIngredients: ["penne pasta", "milk", "cheddar cheese"], ingredients: ["Penne Pasta", "Milk", "Cheddar Cheese"], instructions: "Cook pasta. Melt cheese into warm milk, mix with pasta." },
+            { id: 30, title: "Baked Ziti", img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&q=80", match: "Perfect match!", keyIngredients: ["penne pasta", "tomato", "mozzarella", "minced beef"], ingredients: ["Penne Pasta", "Tomato", "Mozzarella", "Minced Beef"], instructions: "Brown beef, mix with tomatoes and pasta. Top with mozzarella and bake." }
+        ];
+        
+        let filteredRecipes = [];
+        let currentRecipeIndex = 0;
+        let savedRecipes = [];
+
+        function simulateCameraScan() {
+            navTo('screen-home');
+            alert("📷 Scanning your fridge...\n\nAI successfully identified ingredients from your photo!");
+            document.querySelectorAll('.ingredient-item').forEach(el => el.classList.remove('selected'));
+            document.querySelectorAll('.staple-pill').forEach(el => el.classList.remove('active'));
+
+            const perfectCombos = [
+                ["Chicken Breast", "Broccoli", "White Rice"], 
+                ["Spaghetti", "Tomato", "Minced Beef", "Garlic"], 
+                ["Eggs", "Bacon", "Bread", "Cheddar Cheese"], 
+                ["Salmon", "White Rice"],
+                ["Potatoes", "Eggs", "White Onion"] 
+            ];
+            const randomCombo = perfectCombos[Math.floor(Math.random() * perfectCombos.length)];
+
+            document.querySelectorAll('.ingredient-item').forEach(el => {
+                if (randomCombo.includes(el.querySelector('.ing-name').innerText)) el.classList.add('selected');
+            });
+
+            document.querySelectorAll('.staple-pill').forEach(el => {
+                randomCombo.forEach(item => {
+                    if(el.innerText.includes(item)) el.classList.add('active');
+                });
+            });
+            document.getElementById('screen-home').scrollTop = 0;
+        }
+
+        function generateSmartRecipes() {
+            let selectedItems = [];
+            document.querySelectorAll('.ingredient-item.selected .ing-name').forEach(el => {
+                selectedItems.push(el.innerText.toLowerCase());
+            });
+
+            if (selectedItems.length === 0) {
+                filteredRecipes = [...allRecipes].sort(() => 0.5 - Math.random());
+            } else {
+                filteredRecipes = allRecipes.filter(recipe => recipe.keyIngredients.some(keyIng => selectedItems.includes(keyIng)));
+                if (filteredRecipes.length === 0) filteredRecipes = [...allRecipes].sort(() => 0.5 - Math.random());
+            }
+
+            currentRecipeIndex = 0;
+            navTo('screen-swipe');
+        }
+
+        function loadSwipeRecipe() {
+            if (currentRecipeIndex >= filteredRecipes.length) {
+                alert("You've swiped through all matching recipes! Try different ingredients."); 
+                navTo('screen-home'); return;
+            }
+            const r = filteredRecipes[currentRecipeIndex];
+            document.getElementById('swipe-title').innerText = r.title;
+            document.getElementById('swipe-img').src = r.img;
+            
+            let matchEl = document.getElementById('swipe-match');
+            matchEl.innerText = r.match;
+            if(r.match.includes("Missing")) { matchEl.style.color = "#d63031"; } 
+            else { matchEl.style.color = "var(--primary-green)"; }
+        }
+
+        function nextRecipe() { currentRecipeIndex++; loadSwipeRecipe(); }
+
+        function saveRecipe() {
+            const r = filteredRecipes[currentRecipeIndex];
+            if(!savedRecipes.some(saved => saved.id === r.id)) savedRecipes.push(r);
+            alert("Recipe saved to your favorites!");
+            nextRecipe();
+        }
+
+        function toggleProModal() {
+            const modal = document.getElementById('pro-modal');
+            modal.style.display = modal.style.display === "flex" ? "none" : "flex";
+        }
+
+        function navTo(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(screenId).classList.add('active-screen');
+            
+            document.getElementById('nav-home').classList.remove('active');
+            document.getElementById('nav-fav').classList.remove('active');
+            
+            if(screenId === 'screen-home') document.getElementById('nav-home').classList.add('active');
+            if(screenId === 'screen-fav') {
+                document.getElementById('nav-fav').classList.add('active');
+                renderFavorites();
+            }
+            if(screenId === 'screen-swipe') loadSwipeRecipe();
+        }
+
+        function openRecipeDetail(recipeId) {
+            const r = allRecipes.find(rec => rec.id === recipeId);
+            if(!r) return;
+
+            // Generate consistent fake nutrition data based on recipe ID
+            let calories = 300 + (r.id * 12);
+            let protein = 15 + (r.id % 5) * 5;
+            let carbs = 20 + (r.id % 7) * 8;
+            let fats = 10 + (r.id % 4) * 4;
+
+            document.getElementById('detail-title').innerText = r.title;
+            document.getElementById('detail-img').src = r.img;
+            document.getElementById('detail-instructions').innerText = r.instructions;
+            
+            const ul = document.getElementById('detail-ingredients');
+            ul.innerHTML = "";
+            r.ingredients.forEach(ing => {
+                let li = document.createElement('li');
+                li.innerText = ing;
+                if(ing.includes("Missing:")) {
+                    li.style.color = "#d63031"; li.style.fontWeight = "bold";
+                }
+                ul.appendChild(li);
+            });
+
+            // Toggle Pro Tracker UI
+            if(isProUser) {
+                document.getElementById('nutrition-upsell').style.display = 'none';
+                document.getElementById('nutrition-tracker').style.display = 'block';
+                document.getElementById('nutrition-stats').innerHTML = `
+                    <span style="color: #e17055;">🔥 ${calories} kcal</span>
+                    <span style="color: #0984e3;">🥩 ${protein}g P</span>
+                    <span style="color: #e84393;">🍞 ${carbs}g C</span>
+                    <span style="color: #fdcb6e;">🥑 ${fats}g F</span>
+                `;
+            } else {
+                document.getElementById('nutrition-upsell').style.display = 'block';
+                document.getElementById('nutrition-tracker').style.display = 'none';
+            }
+            
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById('screen-detail').classList.add('active-screen');
+        }
+
+        function renderFavorites() {
+            const favContainer = document.getElementById('fav-list');
+            const noFavText = document.getElementById('text-no-favs');
+            
+            while (favContainer.childNodes.length > 2) { favContainer.removeChild(favContainer.lastChild); }
+            
+            if(savedRecipes.length === 0) {
+                noFavText.style.display = 'block'; return;
+            }
+
+            noFavText.style.display = 'none';
+            savedRecipes.forEach(r => {
+                let div = document.createElement('div');
+                div.className = 'fav-item';
+                div.onclick = () => openRecipeDetail(r.id); 
+                div.innerHTML = `
+                    <img src="${r.img}" alt="Thumbnail"> 
+                    <div>
+                        <strong style="font-size: 15px;">${r.title}</strong><br>
+                        <span style="font-size:12px;color:#888;">Tap to view recipe</span>
+                    </div>`;
+                favContainer.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
